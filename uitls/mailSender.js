@@ -1,15 +1,17 @@
 const nodemailer = require("nodemailer");
-require("dotenv").config();
+const {Mail_user,Mail_password}=require('../config/environmentVariable')
+
+
+
 const mailSender = async (email, title, body) => {
     try {
         let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.Mail_user,
-                pass: process.env.Mail_password,
+                user: Mail_user,
+                pass: Mail_password,
             },
-            // port: 465,
-            // host: process.env.MAIL_HOST,
+           
         });
 
 
@@ -25,11 +27,11 @@ const mailSender = async (email, title, body) => {
     }
     catch (error) {
         console.log("inside mainsender utils--", error.message);
-        // console.error(error.responce.message);
-        // return res.status(404).json({
-        //     success: false,
-        //     message: "mailsend error"
-        // })
+        
+        return res.status(404).json({
+            success: false,
+            message: "mailsend error"
+        })
     }
 }
 
