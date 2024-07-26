@@ -21,11 +21,11 @@ app.get('/', (req, res) => {
 app.use('/api/v1/auth', userRoutes);
 // app.js or index.js
 
-sequelize.sync({ force: false }).then(() => {
-  console.log('Database synced');
-}).catch(err => {
-  console.error('Unable to sync database:', err);
-});
+// sequelize.sync({ force: false }).then(() => {
+//   console.log('Database synced');
+// }).catch(err => {
+//   console.error('Unable to sync database:', err);
+// });
 
 // db.sequelize.sync().then(() => {
     app.listen(3000, () => {
