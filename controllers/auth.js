@@ -1,12 +1,14 @@
 // controllers/auth.js
 const bcrypt = require('bcrypt');
-const User = require('../models/user.models'); // Adjust the path as needed
+const User = require('../models/user.models');
 const OTP = require('../models/otp.model');
 const mailSender = require('../uitls/mailSender');
 const Otp_genrator = require("otp-generator");
 const { Op } = require('sequelize');
 const sendMailForOtp = require('../uitls/sendVerificationMail');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const otpTemplate = require('../uitls/email/templates/sendVarificationTemplates');
+const {  sendSuccessResponse,  sendErrorResponse } = require('../uitls/responeFunciton');
 
 
 exports.signup = async (req, res) => {
@@ -14,22 +16,12 @@ exports.signup = async (req, res) => {
         const { firstName, lastName, email, age, password, otp } = req.body;
 
 
-        if (!firstName || !lastName || !email || !password) {
-            console.log(firstName, lastName, age, email, password);
-            return res.status(403).send({
-                success: false,
-                message: "All fields are required"
-            });
-        }
-
         //  Check User Exit or not
         const CheckUserPresent = await User.findOne({ where: { email } });
 
         if (CheckUserPresent) {
-            return res.status(400).json({
-                success: false,
-                message: "User already exists",
-            });
+            return sendErrorResponse(res, 400, "User already exists");
+            
         }
 
         //  find latest otp and validate-------------------------
@@ -46,15 +38,11 @@ exports.signup = async (req, res) => {
         // Validate OTP
         if (!recentotp) {
             // OTP not found
-            return res.status(404).json({
-                success: false,
-                message: "OTP not found",
-            });
+            return sendErrorResponse(res, 404, "OTP not found");
+
         } else if (recentotp.otp !== otp) {
-            return res.status(404).json({
-                success: false,
-                message: "Invalid OTP",
-            });
+            return sendErrorResponse(res, 404, "Invalid OTP");
+
         }
 
         // Hash Password
@@ -68,19 +56,13 @@ exports.signup = async (req, res) => {
             password: Hashedpassword,
             age
         });
+        return sendSuccessResponse(res, 202, "User created successfully");
 
-        return res.status(206).json({
-            success: true,
-            user,
-            message: "User created successfully"
-        });
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "User cannot be created"
-        });
+        return sendErrorResponse(res, 500, "User cannot be created");
+
     }
 }
 
@@ -90,20 +72,12 @@ exports.login = async (req, res) => {
 
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(403).send({
-                success: false,
-                message: "All fields are required"
-            });
-        }
-        // Find user by email
+
         const user = await User.findOne({ where: { email } });
 
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found',
-            });
+            return sendErrorResponse(res, 404, "User not found")
+
         }
 
         // Compare password
@@ -134,18 +108,15 @@ exports.login = async (req, res) => {
                 user,
                 message: 'User Login Success',
             });
-        } else {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid password',
-            });
+        }
+        else {
+            return sendErrorResponse(res, 401, "Invalid password")
+
         }
     } catch (error) {
         console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error',
-        });
+        return sendErrorResponse(res, 500, "Server error")
+
     }
 
 
@@ -154,7 +125,7 @@ exports.login = async (req, res) => {
 
 
 const requestTracker = {};
-const RATE_LIMIT = 5;
+const RATE_LIMIT = 3;
 const TIME_WINDOW = 1 * 60 * 1000;
 const BLOCK_TIME = 5 * 60 * 1000;
 exports.sendOtp = async (req, res) => {
@@ -162,12 +133,7 @@ exports.sendOtp = async (req, res) => {
 
 
     const { email } = req.body;
-    if (!email) {
-        return res.status(403).send({
-            success: false,
-            message: "All fields are required"
-        });
-    }
+
 
     // Rate limiting logic
     const currentTime = Date.now();
@@ -194,10 +160,8 @@ exports.sendOtp = async (req, res) => {
         const CheckUserPresent = await User.findOne({ where: { email } });
 
         if (CheckUserPresent) {
-            return res.status(400).json({
-                success: false,
-                message: "User already exists",
-            });
+            return  sendErrorResponse(res, 400, "User already exists");
+
         }
 
         let otp = Otp_genrator.generate(6, {
@@ -221,17 +185,17 @@ exports.sendOtp = async (req, res) => {
 
         // Create an entity in the database
         const otpbody = await OTP.create(otp_payload);
-        await sendMailForOtp(email, otp);
+        await sendMailForOtp(email, otpTemplate(otp));
 
-        return res.status(200).json({
-            success: true,
-            message: "OTP sent successfully..."
-        });
+        return  sendSuccessResponse(res, 200, "OTP sent successfully...")
+
+
+        // return res.json({
+        //     otp
+        // });
     } catch (error) {
         console.error('Error sending OTP:', error);
-        return res.status(500).json({
-            success: false,
-            message: "An error occurred while sending the OTP"
-        });
+        return sendErrorResponse(res,500,"An error occurred while sending the OTP")
+        
     }
 };

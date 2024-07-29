@@ -45,7 +45,7 @@ Otp.deleteExpired = async function() {
   await Otp.destroy({
     where: {
       createdAt: {
-        [Op.lt]: new Date(now.getTime() - 2 * 60 * 1000) // 5 minutes before current time
+        [Op.lt]: new Date(now.getTime() - 5 * 60 * 1000) // 5 minutes before current time
       }
     }
   });

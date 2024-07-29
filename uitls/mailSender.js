@@ -28,10 +28,7 @@ const mailSender = async (email, title, body) => {
     catch (error) {
         console.log("inside mainsender utils--", error.message);
         
-        return res.status(404).json({
-            success: false,
-            message: "mailsend error"
-        })
+        throw new Error("Failed to send email");
     }
 }
 
