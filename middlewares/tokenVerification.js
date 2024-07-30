@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/user.models");
+const { sendErrorResponse } = require("../uitls/responeFunciton");
 
 
 exports.tokenVerification = async (req, res, next) => {
@@ -8,10 +9,10 @@ exports.tokenVerification = async (req, res, next) => {
 
 
         const token = req.cookies.token || (req.header("Authorization") && req.header("Authorization").replace("Bearer ", ""));
-        console.log(req.cookies.token)
+     
         // If JWT is missing, return 401 Unauthorized response
         if (!token) {
-            console.log("JWT missing", token);
+            // console.log("JWT missing", token);
             return res.status(401).json({ success: false, message: `Token Missing` });
         }
 
@@ -32,9 +33,7 @@ exports.tokenVerification = async (req, res, next) => {
         next();
     } catch (error) {
         // If there is an error during the authentication process, return 401 Unauthorized response
-        return res.status(401).json({
-            success: false,
-            message: `Something Went Wrong While Validating the Token - ${error.message}`,
-        });
+        sendErrorResponse(res,401,error.message)
+       
     }
 };

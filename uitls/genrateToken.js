@@ -13,10 +13,15 @@ const generateTokenAndRespond = (payload, user = null, message, res) => {
         user.token = token;
         user.password = undefined;
     }
-
+    let expiresDate;
+    if(user){
+        expiresDate=new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Cookie expiry set to 3 days
+    }else{
+        expiresDate=new Date(Date.now() + 15 * 60 * 1000); // Cookie expiry set to 15 min
+    }
     // Set options for cookie
     const options = {
-        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Cookie expiry set to 3 days
+        expires: expiresDate, 
         httpOnly: true,
     };
 
