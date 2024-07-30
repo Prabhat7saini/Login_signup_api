@@ -8,16 +8,12 @@ const signUPSchema = yup.object().shape({
     lastName: yup.string()
         .required('Last Name is required')
         .matches(/^[A-Za-z]+$/, 'Last Name can only contain alphabetic characters'),
-    email: yup.string().email('Invalid email').required('Email is required'),
     password: yup.string()
         .required('Password is required')
         .min(8, 'Password must be at least 8 characters')
         .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
         .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
         .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character'),
-    otp: yup.string()
-        .required('OTP is required')
-        .matches(/^\d{6}$/, 'OTP must be exactly 6 digits'),
 });
 
 const LoginSchema = yup.object({

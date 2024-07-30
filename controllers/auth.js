@@ -9,13 +9,20 @@ const sendMailForOtp = require('../uitls/sendVerificationMail');
 const jwt = require('jsonwebtoken');
 const otpTemplate = require('../uitls/email/templates/sendVarificationTemplates');
 const {  sendSuccessResponse,  sendErrorResponse } = require('../uitls/responeFunciton');
+const { generateTokenAndRespond } = require('../uitls/genrateToken');
 
 
 exports.signup = async (req, res) => {
     try {
-        const { firstName, lastName, email, age, password, otp } = req.body;
+        const { firstName, lastName, age, password } = req.body;
+        const tokenData = req.user; 
+        console.log(tokenData.email);
+        email=tokenData.email;
+        if(!email){
+            return sendErrorResponse(res,404,"Email not found");
+        }
 
-
+        
         //  Check User Exit or not
         const CheckUserPresent = await User.findOne({ where: { email } });
 
@@ -24,28 +31,7 @@ exports.signup = async (req, res) => {
             
         }
 
-        //  find latest otp and validate-------------------------
-
-        const checkotpsize = await OTP.findAll({ where: { email: email } });
-        console.log(checkotpsize.length, "leng\n");
-        const recentotp = await OTP.findOne({
-            where: { email: email },
-            order: [['createdAt', 'DESC']],
-        });
-
-        console.log(`recentotp-> ${recentotp.otp}`);
-
-        // Validate OTP
-        if (!recentotp) {
-            // OTP not found
-            return sendErrorResponse(res, 404, "OTP not found");
-
-        } else if (recentotp.otp !== otp) {
-            return sendErrorResponse(res, 404, "Invalid OTP");
-
-        }
-
-        // Hash Password
+         // Hash Password
         const Hashedpassword = await bcrypt.hash(password, 10);
 
         // Create new User
@@ -90,24 +76,7 @@ exports.login = async (req, res) => {
             };
 
             // Generate JWT token
-            const token = jwt.sign(payload, process.env.JWT_SECRET, {
-                expiresIn: '3h',
-            });
-            user.token = token;
-            user.password = undefined;
-            // Set token in cookie
-            const options = {
-                expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                httpOnly: true,
-            };
-
-            // Return response with token and user data
-            return res.cookie('token', token, options).status(200).json({
-                success: true,
-                token,
-                user,
-                message: 'User Login Success',
-            });
+          generateTokenAndRespond(payload,user,"User Login Success",res);
         }
         else {
             return sendErrorResponse(res, 401, "Invalid password")

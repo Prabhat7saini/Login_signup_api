@@ -2,11 +2,12 @@ const express = require('express');
 const app = express();
 const userRoutes = require('./routes/user.routes');
 const { PORT } = require('./config/environmentVariable');
+const cookieParser = require('cookie-parser');
 
 
 // Middleware to parse JSON bodies
 app.use(express.json());
-
+app.use(cookieParser());
 app.get('/', (req, res) => {
     return res.json({
         success: true,

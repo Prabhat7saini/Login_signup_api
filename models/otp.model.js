@@ -52,7 +52,7 @@ Otp.deleteExpired = async function() {
 };
 
 // Initialize cron job for periodic cleanup
-cron.schedule('*/2 * * * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
   try {
     await Otp.deleteExpired();
     console.log('Expired OTPs cleaned up');
